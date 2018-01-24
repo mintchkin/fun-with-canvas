@@ -35,7 +35,7 @@ function countNeighbors(x, y) {
 }
 
 function updateBoard() {
-    let newBoard = []
+    let newBoard = [];
     for (let y = 0; y < size; y++) {
         newBoard[y] = [];
         for (let x = 0; x < size; x++) {
