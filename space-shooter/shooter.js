@@ -12,7 +12,6 @@ const drawAsteroid = (x, y) => {
     const height = 50;
 
     ctx.strokeRect(x - width / 2, y - height / 2, width, height);
-    console.log(x - width / 2, y - height / 2, width, height)
 }
 
 const drawBullet = (x, y) => {
@@ -33,29 +32,42 @@ const drawShip = (x, y) => {
     ctx.stroke();
 }
 
-const drawExplosion = (x, y, width, height) => (n) => {
+const drawExplosion = function* (x, y, width, height) {
     const frameCount = 10;
-    const shrinkWidth = width - (n * width / frameCount);
-    const shrinkHeight = height - (n * height / frameCount);
 
-    const growWidth = width + (n * width / frameCount);
-    const growHeight = height + (n * height / frameCount);
+    for (let n = 1; n < frameCount; n++){
+        const shrinkWidth = width - (n * width / frameCount);
+        const shrinkHeight = height - (n * height / frameCount);
 
-    if (n === frameCount) {
-        ctx.clearRect(x - growWidth / 2, y - growHeight / 2, growWidth, growHeight);
-        return;
+        const growWidth = width + (n * width / frameCount);
+        const growHeight = height + (n * height / frameCount);
+        ctx.fillStyle = "red";
+        ctx.fillRect(x - growWidth / 2, y - growHeight / 2, growWidth, growHeight);
+        ctx.fillStyle = "black";
+
+        ctx.fillRect(x - shrinkWidth / 2, y - shrinkHeight / 2, shrinkWidth, shrinkHeight);
+        yield;
     }
-
-    ctx.fillStyle = "red";
-    ctx.fillRect(x - growWidth / 2, y - growHeight / 2, growWidth, growHeight);
-    ctx.fillStyle = "black";
-
-    ctx.fillRect(x - shrinkWidth / 2, y - shrinkHeight / 2, shrinkWidth, shrinkHeight);
 }
 
 let bullets = [];
 const fireBullet = (x, y) => {
     bullets.push({x, y});
+}
+
+let asteroids = [];
+const findAsteroid = (chance) => {
+    if (Math.random() < chance) {
+        asteroids.push({
+            x: Math.floor(Math.random() * size),
+            y: 0
+        });
+    }
+}
+
+const isColliding = (obj1, obj2) => {
+    return (Math.abs(obj1.x - obj2.x) <= 20 &&
+            Math.abs(obj1.y - obj2.y) <= 20);
 }
 
 // drawShip(250, 250);
@@ -64,6 +76,8 @@ const fireBullet = (x, y) => {
 
 let i = 1;
 let ship = {x: size / 2, y: size - 50, velocity: 0};
+
+explosions = [];
 // const explosion = drawExplosion(250, 250, 50, 50);
 const loop = (timestamp) => {
     ctx.clearRect(0, 0, size, size);
@@ -81,6 +95,38 @@ const loop = (timestamp) => {
     bullets = bullets.filter(bullet => (
         bullet.y > 0
     ));
+
+
+    findAsteroid(1/20);
+    asteroids.map(asteroid => {
+        drawAsteroid(asteroid.x, asteroid.y);
+        asteroid.y += 5;
+    });
+    asteroids = asteroids.filter(asteroid => (
+        asteroid.y < size
+    ));
+
+    explodedAsteroids = asteroids.filter(asteroid => (
+        bullets.some(b => isColliding(asteroid, b))
+    ));
+
+    explosions = explosions.concat(explodedAsteroids.map(asteroid => (
+        drawExplosion(asteroid.x, asteroid.y, 50, 50)
+    )));
+
+    explosions.map(explosion => {
+        explosion.next()
+    })
+
+    asteroids = asteroids.filter(asteroid => (
+        !bullets.some(b => isColliding(asteroid, b))
+    ));
+
+    asteroids.map(asteroid => {
+        if (isColliding(ship, asteroid)) {
+            console.log("AHHHHHHH!!!!!");
+        }
+    });
 
     window.requestAnimationFrame(loop);
 }
