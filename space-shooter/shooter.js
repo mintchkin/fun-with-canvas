@@ -53,19 +53,44 @@ const drawExplosion = (x, y, width, height) => (n) => {
     ctx.fillRect(x - shrinkWidth / 2, y - shrinkHeight / 2, shrinkWidth, shrinkHeight);
 }
 
+let bullets = [];
+const fireBullet = (x, y) => {
+    bullets.push({x, y});
+}
+
 // drawShip(250, 250);
 // drawBullet(250, 200);
 // drawAsteroid(250, 250);
 
-// let i = 1;
+let i = 1;
+let shipPos = {x: size / 2, y: size - 50};
 // const explosion = drawExplosion(250, 250, 50, 50);
-// const loop = (timestamp) => {
-//     explosion(i);
-//     if (i < 10) {
-//         i++;
-//     } else {
-//         i = 1;
-//     }
-//     window.requestAnimationFrame(loop);
-// }
-// window.requestAnimationFrame(loop);
+const loop = (timestamp) => {
+    // explosion(i);
+    // if (i < 10) {
+    //     i++;
+    // } else {
+    //     i = 1;
+    // }
+    ctx.clearRect(0, 0, size, size);
+
+    drawShip(shipPos.x, shipPos.y);
+
+    bullets.map(bullet => {
+        drawBullet(bullet.x, bullet.y);
+        bullet.y -= 10;
+    });
+    window.requestAnimationFrame(loop);
+}
+window.requestAnimationFrame(loop);
+
+
+window.addEventListener("keypress", (e) => {
+    if (e.code === "Space") {
+        fireBullet(shipPos.x, shipPos.y);
+    } else if (e.code === "KeyA") {
+        shipPos.x -= 5;
+    } else if (e.code === "KeyD") {
+        shipPos.x += 5;
+    }
+})
