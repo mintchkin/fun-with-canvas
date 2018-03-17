@@ -6,7 +6,6 @@ canvas.width = size;
 canvas.height = size;
 canvas.style.border = "1px solid black";
 
-
 const drawAsteroid = (x, y) => {
     const width = 50;
     const height = 50;
@@ -66,8 +65,8 @@ const findAsteroid = (chance) => {
 }
 
 const isColliding = (obj1, obj2) => {
-    return (Math.abs(obj1.x - obj2.x) <= 20 &&
-            Math.abs(obj1.y - obj2.y) <= 20);
+    return (Math.abs(obj1.x - obj2.x) <= 25 &&
+            Math.abs(obj1.y - obj2.y) <= 25);
 }
 
 const drawGameOver = () => {
@@ -122,9 +121,9 @@ const loop = (timestamp) => {
         asteroid.y < size
     ));
 
-    explodedAsteroids = asteroids.filter(asteroid => 
-        bullets.some(b => isColliding(asteroid, b))
-    );
+    explodedAsteroids = asteroids.filter(asteroid => {
+        return bullets.some(b => isColliding(asteroid, b))
+    });
 
     explosions = explosions.concat(explodedAsteroids.map(asteroid => {
         score += 1;
@@ -135,9 +134,14 @@ const loop = (timestamp) => {
         explosion.next();
     })
 
-    asteroids = asteroids.filter(asteroid => (
-        !bullets.some(b => isColliding(asteroid, b))
-    ));
+    asteroids = asteroids.filter(asteroid => {
+        bulletLength = bullets.length;
+        bullets = bullets.filter(bullet => {
+            return !isColliding(asteroid, bullet);
+        });
+        return bulletLength == bullets.length;
+        // !bullets.some(b => isColliding(asteroid, b))
+    });
 
     // asteroids.map(asteroid => {
     //     if (isColliding(ship, asteroid)) {
