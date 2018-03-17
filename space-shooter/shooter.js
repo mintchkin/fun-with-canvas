@@ -43,8 +43,8 @@ const drawExplosion = function* (x, y, width, height) {
         const growHeight = height + (n * height / frameCount);
         ctx.fillStyle = "red";
         ctx.fillRect(x - growWidth / 2, y - growHeight / 2, growWidth, growHeight);
-        ctx.fillStyle = "black";
 
+        ctx.fillStyle = "black";
         ctx.fillRect(x - shrinkWidth / 2, y - shrinkHeight / 2, shrinkWidth, shrinkHeight);
         yield;
     }
@@ -70,6 +70,19 @@ const isColliding = (obj1, obj2) => {
             Math.abs(obj1.y - obj2.y) <= 20);
 }
 
+const drawGameOver = () => {
+    ctx.font = '48px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.strokeText("Game Over", canvas.width / 2, canvas.height / 2);
+}
+
+const drawScoreboard = (score) => {
+    ctx.font = '10px sans-serif';
+    ctx.textBaseline = 'hanging';
+    ctx.strokeText(score, 10, 10);
+}
+
 // drawShip(250, 250);
 // drawBullet(250, 200);
 // drawAsteroid(250, 250);
@@ -77,10 +90,13 @@ const isColliding = (obj1, obj2) => {
 let i = 1;
 let ship = {x: size / 2, y: size - 50, velocity: 0};
 
-explosions = [];
+let animation;
+let score = 0;
+let explosions = [];
 // const explosion = drawExplosion(250, 250, 50, 50);
 const loop = (timestamp) => {
     ctx.clearRect(0, 0, size, size);
+    drawScoreboard(score);
 
     if (ship.x + ship.velocity > 5 && ship.x + ship.velocity < size - 5) {
         ship.x += ship.velocity;
@@ -106,31 +122,37 @@ const loop = (timestamp) => {
         asteroid.y < size
     ));
 
-    explodedAsteroids = asteroids.filter(asteroid => (
+    explodedAsteroids = asteroids.filter(asteroid => 
         bullets.some(b => isColliding(asteroid, b))
-    ));
+    );
 
-    explosions = explosions.concat(explodedAsteroids.map(asteroid => (
-        drawExplosion(asteroid.x, asteroid.y, 50, 50)
-    )));
+    explosions = explosions.concat(explodedAsteroids.map(asteroid => {
+        score += 1;
+        return drawExplosion(asteroid.x, asteroid.y, 50, 50);
+    }));
 
     explosions.map(explosion => {
-        explosion.next()
+        explosion.next();
     })
 
     asteroids = asteroids.filter(asteroid => (
         !bullets.some(b => isColliding(asteroid, b))
     ));
 
-    asteroids.map(asteroid => {
-        if (isColliding(ship, asteroid)) {
-            console.log("AHHHHHHH!!!!!");
-        }
-    });
+    // asteroids.map(asteroid => {
+    //     if (isColliding(ship, asteroid)) {
+    //         return;
+    //     }
+    // });
 
-    window.requestAnimationFrame(loop);
+    if (asteroids.some(asteroid => isColliding(ship, asteroid))) {
+        drawGameOver();
+        return;
+    }
+
+    animation = window.requestAnimationFrame(loop);
 }
-window.requestAnimationFrame(loop);
+animation = window.requestAnimationFrame(loop);
 
 
 window.addEventListener("keydown", (e) => {
